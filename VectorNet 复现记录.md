@@ -1,5 +1,9 @@
 # VectorNet 复现记录
 
+## 0. 参考
+
+复现主要参考...
+
 ##  1. 数据处理
 
 VectorNet的输入分为两部分，分别为目标历史轨迹与属性构成的vector和地图信息构成的vector。本次复现使用的数据集为[Argoverse daraset](https://www.argoverse.org/)，数据集的API地址为：[Argoverse API](https://github.com/argoai/argoverse-api)
@@ -29,59 +33,7 @@ VectorNet的输入分为两部分，分别为目标历史轨迹与属性构成�
 
 需要注意的是，不同场景下的obj_num不一样，这需要在训练的时候注意，具体处理方法可以参考[Dataloader](#Datalodar)使用。
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+除了vector之外，还记录了每个obj的非零向量数，和每个场景的label。
 
 
 
@@ -89,6 +41,24 @@ VectorNet的输入分为两部分，分别为目标历史轨迹与属性构成�
 
 1. <span id = "Datalodar">关于pytorch的Dataloader</span>
 
-   在处理
+   在处理不同场景下的obj_num不一样的情况时，Dataloader可以自定义*collate_fn*，使不同shape的Tensor在不增加维度的情况下组成一个新的tensor。
+
+   例如batch size为4的时候，4个tensor的shape分别为[n1,19,128]，[n2,19,128]，[n3,19,128]，[n4,19,128]，则组成的新tensor的shape为[n1+n2+n3+n4,19,128]
+
+   其他处理参考函数细节
+
+   函数定义为：
+
+   ```python
+   def collate_function(batch):
+       polylines = np.concatenate([each[0] for each in batch])
+       obj_num = np.array([each[0].shape[0] for each in batch])
+       polyline_lens = np.concatenate([each[1] for each in batch])
+       labels = np.stack([each[2] for each in batch])
+       return torch.from_numpy(polylines), torch.from_numpy(obj_num), \
+     				 torch.from_numpy(polyline_lens), torch.from_numpy(labels)
+   ```
+
+   
 
 2. 
